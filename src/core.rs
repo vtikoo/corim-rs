@@ -3416,6 +3416,8 @@ impl<'de> Deserialize<'de> for RawValueTypeChoice<'_> {
 #[repr(i64)]
 #[derive(Debug, From, TryFrom, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub enum VersionScheme<'a> {
+    /// Unknown or unspecified version scheme
+    Unknown = 0,
     /// Multi-part numeric version (e.g., 1.2.3)
     Multipartnumeric = 1,
     /// Multi-part numeric version with suffix (e.g., 1.2.3-beta)
@@ -3436,6 +3438,7 @@ impl TryFrom<i64> for VersionScheme<'_> {
 
     fn try_from(value: i64) -> Result<Self, Self::Error> {
         match value {
+            0 => Ok(Self::Unknown),
             1 => Ok(Self::Multipartnumeric),
             2 => Ok(Self::MultipartnumericSuffix),
             3 => Ok(Self::Alphanumeric),
@@ -3454,6 +3457,7 @@ impl TryFrom<&VersionScheme<'_>> for i64 {
 
     fn try_from(value: &VersionScheme<'_>) -> Result<Self, Self::Error> {
         match value {
+            VersionScheme::Unknown => Ok(0),
             VersionScheme::Multipartnumeric => Ok(1),
             VersionScheme::MultipartnumericSuffix => Ok(2),
             VersionScheme::Alphanumeric => Ok(3),
@@ -3518,6 +3522,7 @@ impl Display for VersionScheme<'_> {
         let tmp: String;
 
         let name = match self {
+            Self::Unknown => "unknown",
             Self::Multipartnumeric => "multipartnumeric",
             Self::MultipartnumericSuffix => "multipartnumeric+suffix",
             Self::Alphanumeric => "alphanumeric",

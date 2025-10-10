@@ -2119,6 +2119,12 @@ pub struct MeasurementValuesMap<'a> {
     pub cryptokeys: Option<Vec<CryptoKeyTypeChoice<'a>>>,
     /// Optional integrity register values
     pub integrity_registers: Option<IntegrityRegisters<'a>>,
+    /// Optional TCB status (UpToDate/OutOfDate)
+    pub tcb_status: Option<Text<'a>>,
+    /// Optional TCB date
+    pub tcb_date: Option<Text<'a>>,
+    /// Optional TCB status details
+    pub tcb_status_details: Option<Vec<Text<'a>>>,
     /// Optional extensible attributes
     pub extensions: Option<ExtensionMap<'a>>,
 }
@@ -2175,6 +2181,15 @@ impl Serialize for MeasurementValuesMap<'_> {
             if let Some(integrity_registers) = &self.integrity_registers {
                 map.serialize_entry("integrity-registers", integrity_registers)?;
             }
+            if let Some(tcb_status) = &self.tcb_status {
+                map.serialize_entry("tcb-status", tcb_status)?;
+            }
+            if let Some(tcb_date) = &self.tcb_date {
+                map.serialize_entry("tcb-date", tcb_date)?;
+            }
+            if let Some(tcb_status_details) = &self.tcb_status_details {
+                map.serialize_entry("tcb-status-details", tcb_status_details)?;
+            }
         } else {
             if let Some(version) = &self.version {
                 map.serialize_entry(&0, version)?;
@@ -2218,6 +2233,15 @@ impl Serialize for MeasurementValuesMap<'_> {
             }
             if let Some(integrity_registers) = &self.integrity_registers {
                 map.serialize_entry(&14, integrity_registers)?;
+            }
+            if let Some(tcb_status) = &self.tcb_status {
+                map.serialize_entry(&10001, tcb_status)?;
+            }
+            if let Some(tcb_date) = &self.tcb_date {
+                map.serialize_entry(&10002, tcb_date)?;
+            }
+            if let Some(tcb_status_details) = &self.tcb_status_details {
+                map.serialize_entry(&10003, tcb_status_details)?;
             }
         }
 
@@ -2302,6 +2326,15 @@ impl<'de> Deserialize<'de> for MeasurementValuesMap<'_> {
                                 builder = builder
                                     .integrity_registers(map.next_value::<IntegrityRegisters>()?);
                             }
+                            Some("tcb-status") => {
+                                builder = builder.tcb_status(map.next_value::<Text>()?);
+                            }
+                            Some("tcb-date") => {
+                                builder = builder.tcb_date(map.next_value::<Text>()?);
+                            }
+                            Some("tcb-status-details") => {
+                                builder = builder.tcb_status_details(map.next_value::<Vec<Text>>()?);
+                            }
                             Some(s) => {
                                 extensions.insert(
                                     s.parse::<Integer>().map_err(de::Error::custom)?,
@@ -2355,6 +2388,15 @@ impl<'de> Deserialize<'de> for MeasurementValuesMap<'_> {
                             Some(14) => {
                                 builder = builder
                                     .integrity_registers(map.next_value::<IntegrityRegisters>()?);
+                            }
+                            Some(10001) => {
+                                builder = builder.tcb_status(map.next_value::<Text>()?);
+                            }
+                            Some(10002) => {
+                                builder = builder.tcb_date(map.next_value::<Text>()?);
+                            }
+                            Some(10003) => {
+                                builder = builder.tcb_status_details(map.next_value::<Vec<Text>>()?);
                             }
                             Some(n) => {
                                 extensions.insert(n.into(), map.next_value::<ExtensionValue>()?);
@@ -2419,6 +2461,12 @@ pub struct MeasurementValuesMapBuilder<'a> {
     pub cryptokeys: Option<Vec<CryptoKeyTypeChoice<'a>>>,
     /// Optional integrity register values
     pub integrity_registers: Option<IntegrityRegisters<'a>>,
+    /// Optional TCB status (UpToDate/OutOfDate)
+    pub tcb_status: Option<Text<'a>>,
+    /// Optional TCB date
+    pub tcb_date: Option<Text<'a>>,
+    /// Optional TCB status details
+    pub tcb_status_details: Option<Vec<Text<'a>>>,
     /// Optional extensible attributes
     pub extensions: Option<ExtensionMap<'a>>,
 }
@@ -2480,6 +2528,18 @@ impl<'a> MeasurementValuesMapBuilder<'a> {
         self.integrity_registers = Some(value);
         self
     }
+    pub fn tcb_status(mut self, value: Text<'a>) -> Self {
+        self.tcb_status = Some(value);
+        self
+    }
+    pub fn tcb_date(mut self, value: Text<'a>) -> Self {
+        self.tcb_date = Some(value);
+        self
+    }
+    pub fn tcb_status_details(mut self, value: Vec<Text<'a>>) -> Self {
+        self.tcb_status_details = Some(value);
+        self
+    }
     pub fn extensions(mut self, value: ExtensionMap<'a>) -> Self {
         self.extensions = Some(value);
         self
@@ -2499,6 +2559,9 @@ impl<'a> MeasurementValuesMapBuilder<'a> {
             && self.name.is_none()
             && self.cryptokeys.is_none()
             && self.integrity_registers.is_none()
+            && self.tcb_status.is_none()
+            && self.tcb_date.is_none()
+            && self.tcb_status_details.is_none()
             && self.extensions.is_none()
         {
             return Err(TriplesError::EmptyMeasurementValuesMap)?;
@@ -2517,6 +2580,9 @@ impl<'a> MeasurementValuesMapBuilder<'a> {
             name: self.name,
             cryptokeys: self.cryptokeys,
             integrity_registers: self.integrity_registers,
+            tcb_status: self.tcb_status,
+            tcb_date: self.tcb_date,
+            tcb_status_details: self.tcb_status_details,
             extensions: self.extensions,
         })
     }
@@ -5415,6 +5481,9 @@ mod test {
                 .unwrap();
                 Some(regs)
             },
+            tcb_status: None,
+            tcb_date: None,
+            tcb_status_details: None,
             extensions: Some(ExtensionMap(BTreeMap::from([(
                 Integer(-1),
                 ExtensionValue::Bytes(Bytes::from(vec![0x0a, 0x0b, 0x0c])),
